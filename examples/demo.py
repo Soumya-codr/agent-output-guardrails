@@ -42,3 +42,20 @@ r_clean = pii.check(clean, context={"parsed": validator.check(clean).metadata.ge
 print("\n--- clean response, no PII ---")
 print("found:", r_clean.metadata["found"])
 print("transformed:", r_clean.transformed_output)
+
+# --- Phase 1 pipeline: schema -> pii -> policy ---
+from guardrails.aggregator import AggregatedResults
+from guardrails.policy import PolicyEngine
+
+engine = PolicyEngine()
+
+print("\n\n========== PHASE 1 PIPELINE ==========")
+for label, response in [("leaky", leaky), ("clean", clean), ("broken", bad_json)]:
+    rs = validator.check(response)
+    results = [rs]
+    if rs.passed:
+        results.append(pii.check(response, context={"parsed": rs.metadata.get("parsed")}))
+    decision = engine.decide(AggregatedResults(results=results), response)
+    print(f"\n--- {label} -> {decision.action.value.upper()} ---")
+    print("reason:", decision.reason)
+    print("output:", decision.output)
