@@ -1,6 +1,6 @@
 # Red Team Findings
 
-| Category | Cases Tested | Caught | Bypassed |
+| Category | Cases Tested | Caught | Bypassed (xfail, tracked) |
 |---|---|---|---|
 | Spaced/Dashed Digits | 3 | 1 | 2 |
 | Worded Email | 3 | 1 | 2 |

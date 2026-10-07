@@ -69,7 +69,7 @@ def test_fenced_json_blocked():
 
 
 ##Ideally fences strip hone chahiye — yeh gap hai:
-@pytest.mark.xfail(strict=True, reason="known gap: fenced JSON should be stripped before parsing")
+@pytest.mark.xfail(strict=True, reason="pending: fence stripping in SchemaValidator pre-processing")
 def test_fenced_json_should_strip_and_pass():
     fenced = '```json\n{"name": "Ravi"}\n```'
     result = validator.check(fenced)
@@ -89,11 +89,16 @@ def test_single_quotes_blocked():
     result = validator.check("{'name': 'Ravi'}")
     assert result.passed is False
 
-##Duplicate keys — yeh serious gap hai, Python silently last value rakhta hai:
-@pytest.mark.xfail(strict=True, reason="known gap: duplicate keys silently drop first value")
+class PhoneSchema(BaseModel):
+    phone: str
+
+##Duplicate keys — yeh serious gap hai, SchemaValidator silently last value rakhta hai metadata['parsed'] me:
+@pytest.mark.xfail(strict=True, reason="known gap: duplicate keys silently drop first value in SchemaValidator")
 def test_duplicate_keys_gap():
+    phone_validator = SchemaValidator(PhoneSchema)
     payload = '{"phone": "9876543210", "phone": "1111111111"}'
-    parsed = json.loads(payload)
-    assert parsed == {"phone": "9876543210"}  # pehli value gone, scanner ne dekhi hi nahi
+    result = phone_validator.check(payload)
+    # First value was dropped before PII scanner could inspect it in metadata["parsed"]
+    assert result.metadata["parsed"]["phone"] == "9876543210"
 
 
