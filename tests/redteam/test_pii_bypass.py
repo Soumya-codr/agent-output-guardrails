@@ -92,13 +92,12 @@ def test_single_quotes_blocked():
 class PhoneSchema(BaseModel):
     phone: str
 
-##Duplicate keys — yeh serious gap hai, SchemaValidator silently last value rakhta hai metadata['parsed'] me:
-@pytest.mark.xfail(strict=True, reason="known gap: duplicate keys silently drop first value in SchemaValidator")
+##Duplicate keys — yeh serious gap hai, SchemaValidator ko reject karna chahiye:
+@pytest.mark.xfail(strict=True, reason="known gap: duplicate keys should be rejected by SchemaValidator")
 def test_duplicate_keys_gap():
     phone_validator = SchemaValidator(PhoneSchema)
     payload = '{"phone": "9876543210", "phone": "1111111111"}'
     result = phone_validator.check(payload)
-    # First value was dropped before PII scanner could inspect it in metadata["parsed"]
-    assert result.metadata["parsed"]["phone"] == "9876543210"
+    assert result.passed is False
 
 
